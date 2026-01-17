@@ -1,0 +1,18 @@
+on: [push, pull_request]
+
+name: Continuous Integration
+
+jobs:
+  grammar-tests:
+    name: Grammar Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - working-directory: ./tree-sitter-p4
+        uses: actions/setup-node@v4
+      - working-directory: ./tree-sitter-p4
+        run: npm ci
+      - working-directory: ./tree-sitter-p4
+        run: npm run generate
+      - working-directory: ./tree-sitter-p4
+        run: npm run test
