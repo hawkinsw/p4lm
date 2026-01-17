@@ -19,6 +19,7 @@ jobs:
         run: pwd
       - run: ls -latr
       - uses: tree-sitter/parser-test-action@v3
+        working-directory: ./tree-sitter-p4
       - run: pwd
       - run: tree-sitter generate
       - run: tree-sitter test
