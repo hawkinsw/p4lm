@@ -20,6 +20,7 @@ jobs:
     needs: install-treesitter
     steps:
       - uses: actions/checkout@v2
+      - run: ls -latr /opt/hostedtoolcache/tree-sitter/cli/bin/
       - run: /opt/hostedtoolcache/tree-sitter/cli/bin/tree-sitter generate
         working-directory: ./tree-sitter-p4
 
