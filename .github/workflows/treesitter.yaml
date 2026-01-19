@@ -13,3 +13,4 @@ jobs:
         with:
           install-cli: true
       - run: tree-sitter generate
+        working-directory: ./tree-sitter-p4
