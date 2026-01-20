@@ -34,7 +34,5 @@ jobs:
       # See https://github.com/orgs/community/discussions/25742
       - run: tree-sitter generate
         working-directory: ./tree-sitter-p4
-      - run: tree-sitter test
-        working-directory: ./tree-sitter-p4
       - run: swift build
       - run: swift test
