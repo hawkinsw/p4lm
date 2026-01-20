@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v4
       - uses: tree-sitter/setup-action@v2
-      - uses: swift-actions/setup-swift@v3
+      - uses: swift-actions/setup-swift
       # Because our tree-sitter code is in a subdirectory,
       # and working-directory does not apply to uses, we
       # are forced to specify calls to the CI ourselves.
