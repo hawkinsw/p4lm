@@ -5,6 +5,8 @@ import TreeSitterP4
 import Foundation
 import P4
 
+import P4Macros
+
 @testable import Parser
 
 @Test func test_simple_parser() async throws {
@@ -16,7 +18,7 @@ import P4
         }
         """
 
-    let program = try #require(Parser.Program(simple_parser_declaration))
+    let program = try #UseOkResult(Parser.Program(simple_parser_declaration))
 
     #expect(program.parsers.count == 1)
     #expect(program.parsers[0].states.count == 1)
@@ -32,7 +34,7 @@ import P4
            }
         }
         """
-    #expect(Parser.Program(simple_parser_declaration) == nil)
+    #expect(#RequireErrorResult(Error(withMessage: "Could not compile the P4 program"), Parser.Program(simple_parser_declaration)))
 }
 
 @Test func test_simple_parser_with_statement() async throws {
@@ -45,7 +47,7 @@ import P4
         }
         """
 
-    let program = try #require(Parser.Program(simple_parser_declaration))
+    let program = try #UseOkResult(Parser.Program(simple_parser_declaration))
 
     #expect(program.parsers.count == 1)
     #expect(program.parsers[0].states.count == 1)

@@ -1,40 +1,41 @@
-public struct Error {
-    public private(set) var msg: String
+public class ProgramExecution: CustomStringConvertible {
+    public var scopes: Scopes = Scopes()
 
-    public init(withMessage msg: String) {
-        self.msg = msg
-    }
-}
-
-public enum Result: Equatable {
-    case Ok
-    case Error(Error)
-
-    public static func == (lhs: Result, rhs: Result) -> Bool {
-        switch (lhs, rhs) {
-        case (Ok, Ok):
-            return true
-        case (Error(let le), Error(let re)):
-            return le.msg == re.msg
-        default:
-            return false
-        }
-    }
-}
-
-public struct ParserRuntime {
     public init() {}
 
-    public func run(program: P4.Parser, input: P4.Packet) -> Result {
+    public var description: String {
+        return "Runtime:\nScopes: \(scopes)"
+    }
+}
 
+//public struct ParserRuntime: ProgramRuntime {
+public class ParserRuntime: CustomStringConvertible {
+    var execution: ParserExecution
+
+    init(execution: ParserExecution) {
+        self.execution = execution
+    }
+
+    public static func create(program: P4.Parser) -> Result<ParserRuntime> {
         // First, find the start state.
-        guard var start_state = program.findStartState() else {
+        guard let start_state = program.findStartState() else {
             return Result.Error(Error(withMessage: "Could not find the start state"))
         }
-        var execution = P4.ParserExecution(start_state)
+        return Result.Ok(P4.ParserRuntime(execution: P4.ParserExecution(start_state)))
+    }
+
+    public func run(input: P4.Packet) -> Result<Nothing> {
+        execution.scopes.enter()
+        print("Execution: \(execution)")
         while execution.state != P4.accept && execution.state != P4.reject {
             execution = execution.state.evaluate(execution: execution)
+            print("Execution: \(execution)")
         }
-        return Result.Ok
+        return .Ok(Nothing())
+    }
+
+    public var description: String {
+        //return "\(super.description)\nState: \(execution?.description ?? "N/A")\nError: \(error?.description ?? "None")"
+        return "Runtime:\nExecution: \(execution)"
     }
 }

@@ -6,7 +6,7 @@ public struct LocalElement {
 
 }
 
-public struct ParserExecution {
+public class ParserExecution: ProgramExecution {
     public var state: ParserState
 
     public init(_ state: ParserState) {
@@ -14,7 +14,13 @@ public struct ParserExecution {
     }
 
     public func transition(toNextState state: ParserState) -> ParserExecution {
-        return ParserExecution(state)
+        let next = self
+        next.state = state
+        return next
+    }
+
+    public override var description: String {
+        return "Execution: \(super.description)\nCurrent State: \(state)"
     }
 }
 
@@ -26,7 +32,7 @@ public protocol Expression {
     func evaluate(execution: ParserExecution) -> Value
 }
 
-public protocol ParserStatement: Sendable {
+public protocol ParserStatement {
     /// Evaluate a statement for a given execution
     /// - Parameters
     ///  - execution: The execution context in which to evaluate the parser statement
@@ -37,6 +43,20 @@ public protocol ParserStatement: Sendable {
 public struct ParserTransitionStatement: ParserStatement {
     public init() {}
     public func evaluate(execution: ParserExecution) -> ParserExecution {
+        return execution 
+    }
+}
+
+public struct VariableDeclarationStatement: ParserStatement {
+    public var id: Identifier
+    public init(withIdentifier id: Identifier) {
+        self.id = id
+    }
+
+    public func evaluate(execution: ParserExecution) -> ParserExecution {
+        print("Evaluating!")
+        execution.scopes.scopes[0].variables.append(Variable(name: id.name, withValue: id.value, isConstant: false))
+        print("Execution: \(execution)")
         return execution
     }
 }
@@ -48,32 +68,46 @@ public struct ExpressionStatement: ParserStatement {
     }
 }
 
-public struct ParserState: Equatable, Sendable {
+public struct ParserState: Equatable, CustomStringConvertible {
+
     public private(set) var state_name: String
+    public private(set) var local_elements: [ParserStatement]
     public private(set) var statements: [ParserStatement]
     public private(set) var transition: ParserTransitionStatement?
+
+    public var description: String {
+        return "Name: \(state_name)"
+    }
 
     public static func == (lhs: ParserState, rhs: ParserState) -> Bool {
         return lhs.state_name == rhs.state_name
     }
 
     /// Construct a ParserState
-    public init(name: String, withStatements statements: [ParserStatement]?, withTransition transitionStatement: ParserTransitionStatement) {
+    public init(name: String, withLocalElements localElements: [ParserStatement]?, withStatements statements: [ParserStatement]?, withTransition transitionStatement: ParserTransitionStatement) {
         state_name = name
         transition = transitionStatement
+        local_elements = localElements ?? Array()
         self.statements = statements ?? Array()
     }
 
     func evaluate(execution: ParserExecution) -> ParserExecution {
         var currentExecution = execution
+
+        // First, evaluate the local elements.
+        for local_element in local_elements {
+            currentExecution = local_element.evaluate(execution: currentExecution)
+        }
+
+        // Then, evaluate the statements.
         for statement in statements {
             currentExecution = statement.evaluate(execution: currentExecution)
         }
 
         return if let transition = transition {
-            execution.transition(toNextState: accept)
+            currentExecution.transition(toNextState: accept)
         } else {
-            execution.transition(toNextState: reject)
+            currentExecution.transition(toNextState: reject)
         }
     }
 
@@ -83,18 +117,19 @@ public struct ParserState: Equatable, Sendable {
     init(name: String) {
         state_name = name
         transition = .none
+        local_elements = Array()
         statements = Array()
     }
 }
 
-public struct ParserStates: Sendable {
+public struct ParserStates {
     public var states: [ParserState] = Array()
 }
 
-public let accept: ParserState = ParserState(name: "accept")
-public let reject: ParserState = ParserState(name: "reject")
+nonisolated(unsafe) public let accept: ParserState = ParserState(name: "accept")
+nonisolated(unsafe) public let reject: ParserState = ParserState(name: "reject")
 
-public struct Parser {
+public struct Parser: CustomStringConvertible {
     public var states: [ParserState] = Array()
     public var count: Int {
         states.count
@@ -109,5 +144,9 @@ public struct Parser {
             }
         }
         return .none
+    }
+
+    public var description: String {
+        return "Parser"
     }
 }
